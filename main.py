@@ -11,9 +11,8 @@
 
 #2 DO:
 #roles txt (idk lol)
-#floppa gif when someone says floppa
 #maybe fix nami timer again
-#organise (both code and stupid fucking comments)
+#organise? (whatever dude shit works i dont give a fuck this sucks)
 
 import keep_alive
 from discord.ext import tasks
@@ -25,11 +24,13 @@ import os
 import time
 import joinboice
 import weatherloop
+import requests
+import json
 #from pyowm import OWM
 #import namiping
 
 exec(open("joinboice.py").read())
-#exec(open("namiping.py").read())
+exec(open("namiping.py").read())
 exec(open("weatherloop.py").read())
 
 #light blue: (135, 206, 250)
@@ -64,18 +65,13 @@ def filewriteg(filename, time_now, timertime):
 @client.event
 async def on_ready():
     print('logged in as {0.user}'.format(client))
-    #print(client.guilds[0].roles[5].name)
-    global guilds_and_roles
-    #global tchannel_ids
     tchannel_ids = []
-    guilds_and_roles = {}
     for guildd in client.guilds:
         for channell in guildd.text_channels:
             tchannel_ids.append(channell.id)
 
     for id in tbanned_ids:
         tchannel_ids.remove(id)
-    #print(tchannel_ids)
 
     global lastmes_dict
     lastmes_dict = {}
@@ -83,19 +79,6 @@ async def on_ready():
         ttchannel = client.get_channel(idd)
         ttchannel_lastmesid = ttchannel.last_message_id
         lastmes_dict[str(idd)] = ttchannel_lastmesid
-    #print(guilds_and_roles)
-    #await role_stuff.start()
-    #print('abced'.find('b'))
-
-
-# rev_e = rev.partition('<')[0]
-#print('<' + rev_e[::-1])
-#await client.get_channel(815405711726084156).send('<' + rev_e[::-1])
-#print(thing.content[::-1])
-
-#in my arms i leave my life for yours
-#i go on to live so many moooooore
-
 
 class role_stuff(object):
     def __init__(self, mm):  #mm is member
@@ -109,10 +92,6 @@ class role_stuff(object):
 
 @client.event
 async def on_message(message):
-    #if message.author == client.user:
-    #return
-    #if message.author.id == 467408259414753283:
-      #await message.channel.send('<:wyzzz:805564173937147940>')
 
     if message.channel.id in tbanned_ids:
         return
@@ -129,9 +108,8 @@ async def on_message(message):
 
     if not (message.content.startswith('$addreaction')
             or len(message.content) <= 0) or len(message.attachments) > 0:
-        #print(message.content)
         lastmes_dict[str(message.channel.id)] = message.id
-        #print(lastmes_id)
+
 
     if message.author.bot:
         return
@@ -148,7 +126,6 @@ async def on_message(message):
     def filereadtimes(filename_):
         timefile = open(filename_, 'r')
         linelist = timefile.readlines()
-        #ini_string[:-(len(sstring))]
         nowtimev1 = linelist[0]
         timer = float(linelist[1])
         timefile.close()
@@ -160,15 +137,9 @@ async def on_message(message):
         r = time_left(l[0], l[1])
         return r
 
-    #so call me when the world looks bleak
-    #i love you but its hard to believe
-    #with every day will start to seem
-    #the rest is metamodernity
-
     def ping_pong(input_message):
         if message.author.bot:
             return
-        #print mystr[mystr.find(char1)+1 : mystr.find(char2)]
         input_message_new = ''
         dont_t = ''
         if '<' in input_message and '>' in input_message:
@@ -204,7 +175,6 @@ async def on_message(message):
     async def react(message_r, message_t_id):
         emoji = await get_emoji(message_r)
         message_t = await message_r.channel.fetch_message(message_t_id)
-        #print(emoji)
         await message_t.add_reaction(emoji)
         await message.delete()
 
@@ -219,7 +189,6 @@ async def on_message(message):
         return template_weather
 
     command_dict = {
-        '$allroles': [send_message, [message, str(guilds_and_roles)[:2000]]],
         '$weather':
         [send_message, [message, weather_yeah(message.content[9:])]],
         '$cheadle': [send_filec, [message, discord.File("result.jpg")]],
@@ -243,10 +212,10 @@ async def on_message(message):
             send_message,
             [message, read_return_time('namitime.txt') + ' seconds']
         ],
-        #'$mmmmtime': [send_message, [message, time_left(tsec_mmmm ,wait_mmmm) + ' seconds mmmm']],
         '$addreaction ':
         [react, [message, lastmes_dict[str(message.channel.id)]]],
         '$mesdict': [send_message, [message, lastmes_dict]],
+        '$floppa': [floppagif, [message, 'floppa']],
         'mm': [send_message, [message, mmmm()]],
         'ping': [send_message, [message,
                                 ping_pong(str(message.content))]],
@@ -255,16 +224,6 @@ async def on_message(message):
     }
 
     command_namelist = list(command_dict)
-
-    #command_arglist = [
-    #    [message, str(len(wordlist)) + ' words'],
-    #    [message, time_left(tsecc, wtimec) + ' seconds'],
-    #    [message, read_return_time('jointime.txt') + ' seconds'],
-    #    [message, ping_pong(str(message.content))],
-    #    [message, str(len(joinboice.songlist)) + ' songs'], [message],
-    #    [message, read_return_time('namitime.txt') + ' seconds'],
-    #    [message, mmmm()], [message, lastmes_dict[str(message.channel.id)]], #[message, time_left(tsec_mmmm ,wait_mmmm) + ' seconds mmmm'], [message, #lastmes_dict]
-    #]
 
     for command in command_namelist:
         if command.upper() in message.content.upper():
@@ -293,75 +252,6 @@ async def on_message(message):
                 await command_dict[command][0](command_args[0])
             return
 
-    #def voice_time():
-    #    timefile = open('jointime.txt', 'r')
-    #    linelist = timefile.readlines()
-    #    #ini_string[:-(len(sstring))]
-    #    nowtimev1 = linelist[0]
-    #    timer = float(linelist[1])
-    #    timefile.close()
-    #    nowtimev = float(nowtimev1[:-(2)])
-    #    nowtsecv = time.time()
-    #    elapsedv = nowtsecv - nowtimev
-    #    timeleftv = timer - elapsedv
-    #    await message.channel.send(str(int(timeleftv)) + ' seconds')
-    ##if message.content == 'ping' or message.content == 'ping :ping_pong:':
-    ##await message.channel.send('pong :ping_pong:')
-    #if message.content.startswith('ping'):
-    #    #banned_words = [
-    #     kiss kiss kiss a fantasyyy
-    #      lay down with me, valerieeee
-    #        #'cica', 'seecuh', 'seecah', 'sicuh', 'sicah',
-    #        #' cica', ' seecuh', ' seecah', ' sicuh',
-    #       # ' sicah', 'seaca', 'sica', ' seaca', ' sica',
-    #        #'sicah', ' sicah', 'sicuh', ' sicuh',
-    #    #]
-    #    return_message = 'pong' + message.content[4:] + ' :ping_pong:'
-    #    banned_1 = ['', ' ']
-    #    banned_2 = ['c', 's']
-    #    banned_3 = ['i', 'ee', 'ea']
-    #    banned_4 = ['c', 'k', 'ck']
-    #    banned_5 = ['a', 'ah', 'u', 'uh']
-    #    for word1 in banned_1:
-    #      for word2 in banned_2:
-    #        for word3 in banned_3:
-    #          for word4 in banned_4:
-    #            for word5 in banned_5:
-    #              fullword = word1 + word2 + word3 + word4 + word5
-    #              if 'jah' in message.content:
-    #                break
-    #              elif fullword in message.content:
-    #                return_message = 'fuck you higg'
-    #    #for word in banned_words:
-    #        #if message.content.startswith('ping' + word):
-    #            #return_message = 'fuck you higg'
-    #    await message.channel.send(return_message)
-    #    print('ponged')
-    #    an angel held me like a child
-    #if message.content.startswith('$lensonglist'):
-    #    await message.channel.send(len(joinboice.songlist))
-    #if message.content.startswith('$joinvoice'):
-    #    await join_song_com(message.author.voice.channel.id,
-    #                        message.content[11:])
-    #    #print(str(message.author.voice.channel.id))
-    #if message.content.startswith('$namitime'):
-    #    timefilen = open('namitime.txt', 'r')
-    #    linelist = timefilen.readlines()
-    #    sitting all alone
-    #    and you call me on the phone
-    #    and you say "i need love,
-    #    can you get to me now?"
-    #    #ini_string[:-(len(sstring))]
-    #    nowtimen1 = linelist[0]
-    #    timern = float(linelist[1])
-    #    timefilen.close()
-    #    nowtimen = float(nowtimen1[:-(2)])
-    #    nowtsecn = time.time()
-    #    elapsedn = nowtsecn - nowtimen
-    #    ntime_left = timern - elapsedn
-    #    :D  ^ 3^
-    #    await message.channel.send(str(int(ntime_left)) + ' seconds left')
-
 gdict = {}
 @client.event
 async def on_member_remove(member):
@@ -374,7 +264,6 @@ async def on_member_remove(member):
 @client.event
 async def on_member_join(member):
     print('yeah')
-    #if str(member.id) in list(gdict[str(member.guild.id)]):
     try:
       for r in gdict[str(member.guild.id)][str(member.id)].rolelist:
         try:
@@ -385,24 +274,9 @@ async def on_member_join(member):
           pass
     except KeyError:
       pass #add txt stuff here eventually?
-                
-
-
-#@client.event
-#async def on_member_update(before, after):
-#    #print(before)
-#    #print(before)
-#    if before.roles != after.roles:
-#        global guilds_and_roles
-#        guilds_and_roles[str(after.guild.name)][str(after.name)] = []
-#        for role in after.roles:
-#            guilds_and_roles[str(after.guild.name)][str(after.name)].append(
-#                role.id)
-#        #print(guilds_and_roles[str(after.guild.name)][str(after.name)])
-
 
 def cheadlewotd():
-    filename = 'dc_pics/' + str(random.randint(1, 70)) + '.jpg'
+    filename = 'dc_pics/' + str(random.randint(1, 71)) + '.jpg'
     #filename = 'dc_pics/' + str(51) + '.jpg'
     my_image = Image.open(filename)
     with Image.open(filename) as image:
@@ -457,7 +331,6 @@ async def timer_shit_fuck():
     print('sending cheadle...')
     cheadlewotd()
     message_channel = client.get_channel(target_channel_id)
-    #print(f"Got channel {message_channel}")
     await message_channel.send(file=discord.File('result.jpg'))
     print('cheadle sent')
     await asyncio.sleep(240)
@@ -468,6 +341,19 @@ async def before_timer_shit_fuck():
     await client.wait_until_ready()
     await asyncio.sleep(1)
 
+@client.event
+async def floppagif(input_message, keyword):
+  apikey = 'ACQ2CXM2PN1Z'
+  lmt = 50
+  search_term = keyword
+  r = requests.get("https://g.tenor.com/v1/search?q={}&key={}&limit={}".format(search_term, apikey, lmt))
+  idd = random.randint(0, lmt-1)
+  if r.status_code == 200:
+    top_gifs = json.loads(r.content)
+    fuck = top_gifs['results'][idd]['media'][0]['gif']['url']
+  else:
+    fuck = 'no gifs found'
+  await input_message.channel.send(fuck)
 
 #@jahtimer.before_loop
 #async def before_timer_jahtimer():
@@ -475,19 +361,9 @@ async def before_timer_shit_fuck():
 #await asyncio.sleep(1)
 # :) <3
 
-#----------------------------------------------------------------------------------------
-#------------------------------------$joinvoice------------------------------------------
-#----------------------------------------------------------------------------------------
-
-#true_n_general = 802684938381557840  #nme
-#testing_id = 815405498412171294  #testing
-#doangus = 817632403228196874  #doangus
-#yeah that girls disingenuous
-#i cant lie shes a genius
-#fuck mars we on venus
-
-#vc_id_list = [doangus, true_n_general] #doangus then general
-#vc_id_list = [testing_id]
+#------------------------------------------------------------------------------------
+#------------------------------------$joinvoice--------------------------------------
+#------------------------------------------------------------------------------------
 
 songlistwvol = joinboice.songlistwvol
 songlist = list(songlistwvol)
@@ -495,7 +371,6 @@ songlist = list(songlistwvol)
 
 @client.event
 async def joinm(boice_channel):
-    #global channel
     print(f"Got channel {boice_channel}")
     return await boice_channel.connect()
 
@@ -509,8 +384,6 @@ async def leavem(boice_channel, voicec):
 @client.event
 async def playsongm(index, voicec):
     print('playing ' + songlist[index])
-    #songindex = random.randint(0, len(songlist) - 1)
-    #songindex = 0
     song = songlist[index]
     audio = discord.FFmpegPCMAudio(source="songs/" + song + ".mp3")
     source = discord.PCMVolumeTransformer(audio)
@@ -545,29 +418,7 @@ def mmmm():
         send_string += 'm'
     return send_string
 
-
-@tasks.loop()
-@client.event
-async def mmmm_loop():
-    global wait_mmmm
-    global tsec_mmmm
-    channel = client.get_channel(general_idd)
-    tsec_mmmm = time.time()
-    wait_mmmm = random.randint(10, 172800)
-    await asyncio.sleep(wait_mmmm)
-    #await asyncio.sleep(5)
-    await channel.send(mmmm())
-
-
-@mmmm_loop.before_loop
-async def before_mmmm():
-    await client.wait_until_ready()
-    await asyncio.sleep(1)
-
-
-#mmmm_loop.start()
-timer_shit_fuck.start()  #this sucks
-#fuck repl.it
+timer_shit_fuck.start()
 #jahtimer.start()
 
 keep_alive.keep_alive()

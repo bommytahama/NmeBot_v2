@@ -10,7 +10,7 @@ terry_id = 587054039452221603
 bee_id = 359881799939391488
 
 id_list = [jah_id, knuc_id, terry_id, bee_id]
-sda_channel = 815405497444073515
+sda_channel = 745893614680539176
 
 
 @client.event
@@ -63,7 +63,7 @@ async def nami_timer():
         wtime1 = (60) * ((60 - t.tm_min) + send_min)
         next_hour = 1
 
-    if t.tm_hour <= send_time and not(t.tm_min >= send_min and t.tm_hour == send_time):
+    if t.tm_hour <= send_time and not(t.tm_hour == send_time and t.tm_min > send_time):
         #print('3-n-1')
         wtime2 = (60 * 60) * ((send_time - t.tm_hour) - next_hour)
         next_day = 0
@@ -72,41 +72,20 @@ async def nami_timer():
         wtime2 = (60 * 60) * (((24 - t.tm_hour) - next_hour) + send_time)
         next_day = 1
 
-    #if t.tm_hour <= send_time and not(t.tm_min > send_time and t.tm_hour >= send_time):
-    #    print('3-n-1')
-    #    wtime2 = (60 * 60) * ((send_time - t.tm_hour) - next_hour)
-    #
-    #    next_day = 0
-    #else:
-    #    print('3-n-2')
-    #    wtime2 = (60 * 60) * (((24 - t.tm_hour) - next_hour) + send_time)
-    #    fucking didiot
-    #    next_day = 1
 
-    #day <= send_day, hour <= hour, minute < minute
-    if t.tm_wday <= send_day and not((t.tm_min > send_min or t.tm_hour > send_time) and t.tm_wday == send_day):
-        print#('4-n-1')
+    if t.tm_wday <= send_day and not(t.tm_wday == send_day and (t.tm_hour > send_time or (t.tm_hour == send_time and t.tm_min > send_min))):
+        #print#('4-n-1')
         wtime3 = (60 * 60 * 24) * ((send_day - t.tm_wday) - next_day)
     else:
-        print#('4-n-2')
+        #print#('4-n-2')
         wtime3 = (60 * 60 * 24) * (((7 - t.tm_wday) - next_day) + send_day)
 
-    #if t.tm_wday <= send_day and not(t.tm_min > send_time and t.tm_hour > send_time and #t.tm_wday >= send_day):
-    #    print('4-n-1')
-    #    wtime3 = (60 * 60 * 24) * ((send_day - t.tm_wday) - next_day)
-    #else:
-    #    print('4-n-2')
-    #    wtime3 = (60 * 60 * 24) * (((7 - t.tm_wday) - next_day) + send_day)
-    #print(time.gmtime())
-    #print(wtime1)
-    #print(wtime2)
-    #print(wtime3)
     wtime = wtime1 + wtime2 + wtime3
     filewriten(tsec, wtime)
     await asyncio.sleep(wtime)
     print('sending ping...')
     await nami_ping(sda_channel, id_list)
-    wtimea = 180
+    wtimea = 720
     tsec = time.time()
     filewriten(tsec, wtimea)
     await asyncio.sleep(wtimea)
