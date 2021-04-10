@@ -298,7 +298,7 @@ async def on_message(message):
                 for word4 in banned_4:
                     for word5 in banned_5:
                         fullword = word2 + word3 + word4 + word5
-                        if 'JAH' + fullword.upper() in message.content.upper():
+                        if 'PING' + fullword.upper() in message.content.upper() or 'PONG' + fullword.upper() in message.content.upper():
                             return 'shut up higg'
         input_message_new = ''
         dont_t = ''
