@@ -1,0 +1,92 @@
+
+    async def send_filec(input_message, output):
+        cheadle_com()
+        await input_message.channel.send(file=output)
+
+    async def join_channel(input_message):
+        await join_song_com(input_message.author.voice.channel.id,
+                            input_message.content[len('$joinvoice '):])
+
+    async def get_emoji(message_e):
+        return_e = message_e.content[(len('$addreaction')) + 1:]
+        return return_e
+
+    async def react(message_r, message_t_id):
+        emoji = await get_emoji(message_r)
+        message_t = await message_r.channel.fetch_message(message_t_id)
+        await message_t.add_reaction(emoji)
+        await message.delete()
+
+    def weather_yeah(city):
+        try:
+            template_weather = weatherloop.weathermessage.format(
+                *weatherloop.get_weather_things(city))
+        except:
+            city = 'Boston, US'
+            template_weather = weatherloop.weathermessage.format(
+                *weatherloop.get_weather_things(city))
+        return template_weather
+
+    command_dict = {
+        '$weather':
+        [send_message, [message, weather_yeah(message.content[9:])]],
+        '$cheadle': [send_filec, [message, discord.File("result.jpg")]],
+        '$echo ': [send_message, [message, message.content[6:]]],
+        '$chance': [send_message, [message,
+                                   str(chance) + ' out of 50000']],
+        '$words': [send_message, [message,
+                                  str(len(wordlist)) + ' words']],
+        '$timeleftcheadle':
+        [send_message, [message,
+                        time_left(tsecc, wtimec) + ' seconds']],
+        '$voicetimer': [
+            send_message,
+            [message, read_return_time('jointime.txt') + ' seconds']
+        ],
+        '$lensonglist':
+        [send_message, [message,
+                        str(len(joinboice.songlist)) + ' songs']],
+        '$joinvoice': [join_channel, [message]],
+        '$namitime': [
+            send_message,
+            [message, read_return_time('namitime.txt') + ' seconds']
+        ],
+        '$addreaction ':
+        [react, [message, lastmes_dict[str(message.channel.id)]]],
+        '$mesdict': [send_message, [message, lastmes_dict]],
+        '$floppa': [floppagif, [message, 'floppa']],
+        'mm': [send_message, [message, mmmm()]],
+        'ping': [send_message, [message,
+                                ping_pong(str(message.content))]],
+        'pong': [send_message, [message,
+                                ping_pong(str(message.content))]],
+    }
+
+    command_namelist = list(command_dict)
+
+    for command in command_namelist:
+        if command.upper() in message.content.upper():
+            #print('test')
+            if 'JAH' in message.content.upper():
+                pass
+            else:
+                banned_2 = ['c', 's']
+                banned_3 = ['i', 'ee', 'ea']
+                banned_4 = ['c', 'k', 'ck', 's']
+                banned_5 = ['a', 'ah', 'u', 'uh']
+                for word2 in banned_2:
+                    for word3 in banned_3:
+                        for word4 in banned_4:
+                            for word5 in banned_5:
+                                fullword = word2 + word3 + word4 + word5
+                                if fullword.upper() in message.content.upper():
+                                    return_message = 'shut up higg'
+                                    await message.channel.send(return_message)
+                                    return
+            command_args = command_dict[command][1]
+            try:
+                await command_dict[command][0](command_args[0],
+                                               command_args[1])
+            except:
+                await command_dict[command][0](command_args[0])
+            return

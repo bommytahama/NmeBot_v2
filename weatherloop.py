@@ -1,18 +1,14 @@
-from discord.ext import tasks
+from discord.ext import tasks, commands
 import asyncio
-#import random
 import discord
-#import os
 import time
 from pyowm import OWM
-#from pyowm.utils import config
-#from pyowm.utils import timestamps
 import datetime
 
 owm = OWM('36468e84160aed68e1cf6d38fed55140')
 mgr = owm.weather_manager()
 
-client = discord.Client(intents=discord.Intents.all())
+client = commands.Bot(intents=discord.Intents.all(), command_prefix='$')
 weatherchannel = 825882341314265129
 
 city_list = ['San Diego, US']
@@ -38,32 +34,28 @@ def get_weather_things(city):
     else:
         filler = 'be getting'
     changedict = {
-      'clear sky': 'clear skies :sunny:',
-      'few clouds': 'a few clouds :cloud:',
-      'scattered clouds': 'scattered clouds :partly_sunny:',
-      'broken clouds': 'broken clouds :white_sun_small_cloud:',
-      'overcast clouds': 'overcast clouds :fog:',
-      'light rain': 'light rain :cloud_rain:',
+        'clear sky': 'clear skies :sunny:',
+        'few clouds': 'a few clouds :cloud:',
+        'scattered clouds': 'scattered clouds :partly_sunny:',
+        'broken clouds': 'broken clouds :white_sun_small_cloud:',
+        'overcast clouds': 'overcast clouds :fog:',
+        'light rain': 'light rain :cloud_rain:',
     }
     changedictlist = list(changedict)
     wgenlist = [wgen, wgenfor]
     for thing3 in wgenlist:
-      for thing4 in changedictlist:
-        if str(thing3) == thing4:
-          wgenlist[wgenlist.index(thing3)] = changedict[str(thing3)]
+        for thing4 in changedictlist:
+            if str(thing3) == thing4:
+                wgenlist[wgenlist.index(thing3)] = changedict[str(thing3)]
     wgen = wgenlist[0]
     wgenfor = wgenlist[1]
 
-    #for thing2 in changedictlist:
-    #    if str(wgen) == thing2:
-    #      wgen = changedict[wgen]
-    
-    #for thing in changedictlist:
-    #    if str(wgenfor) == thing:
-    #      wgenfor = changedict[wgenfor]
-    return city, wgen, str(wtemp), str(wtempmin), str(wtempmax), str(wwindspeed), filler, wgenfor
+    return city, wgen, str(wtemp), str(wtempmin), str(wtempmax), str(
+        wwindspeed), filler, wgenfor
+
 
 #maybe it was ME who was fucking up
+
 
 def filewritew(filename, time_now, timertime):
     timefile = open(filename, "r+")
@@ -71,7 +63,9 @@ def filewritew(filename, time_now, timertime):
     timefile.writelines(str(time_now) + '\n' + str(timertime))
     timefile.close()
 
+
 weathermessage = 'in {} right now there\'s {}, with temperatures around {}°F with lows of {}°F and highs of {}°F, as well as wind speeds around {} mph, and later on it seems like we\'ll {} {}'
+
 
 @tasks.loop()
 @client.event
@@ -85,11 +79,9 @@ async def weathertimer():
     if t.tm_hour == send_time and t.tm_min == 0:
         wtimew = 0
     elif t.tm_hour < send_time:
-        #print('2')
         wtimew = ((60 * 60) * ((send_time - 1) - t.tm_hour)) + (
             (60) * (59 - t.tm_min)) + (60 - t.tm_sec)
     elif t.tm_hour >= send_time:
-        #print('3')
         wtime1 = ((60 * 60) *
                   (23 - t.tm_hour)) + ((60) *
                                        (59 - t.tm_min)) + (60 - t.tm_sec)
@@ -101,11 +93,8 @@ async def weathertimer():
     print(f"Got channel {message_channelw}")
     for c in city_list:
         await message_channelw.send(
-            weathermessage.format(*get_weather_things(c))
-        )
+            weathermessage.format(*get_weather_things(c)))
     await asyncio.sleep(240)
-    #await message_channelw.send(f'weather is {wgen}')
-    #await asyncio.sleep(240)
 
 
 @weathertimer.before_loop

@@ -9,13 +9,18 @@
 #join here: https://discord.com/invite/mjxC8M2 <3
 #trash star beat the odds
 
+#10/04/21
+#complete command rewrite woooooooooooooooooo
+
 #2 DO:
+#OUTLINES on text
+#db, use for large data analysis (word frequency)
 #roles txt (idk lol)
 #maybe fix nami timer again
 #organise? (whatever dude shit works i dont give a fuck this sucks)
 
 import keep_alive
-from discord.ext import tasks
+from discord.ext import tasks, commands
 import asyncio
 import random
 from PIL import Image, ImageFont, ImageDraw
@@ -26,8 +31,8 @@ import joinboice
 import weatherloop
 import requests
 import json
-#from pyowm import OWM
-#import namiping
+#import anim
+#from replit import db
 
 exec(open("joinboice.py").read())
 exec(open("namiping.py").read())
@@ -38,7 +43,7 @@ exec(open("weatherloop.py").read())
 #dark(?) pink: (219, 112, 147)
 
 intents = discord.Intents.all()
-client = discord.Client(intents=intents)
+client = commands.Bot(intents=intents, command_prefix='$')
 testingid = 815405711726084156  #testing server
 target_channel_id = 815084936985706506  #noose maniacs server
 general_id = 725245718750822411  #t_n general chat
@@ -62,9 +67,26 @@ def filewriteg(filename, time_now, timertime):
     timefile.close()
 
 
+daysdict = {
+    '0': 'monday',
+    '1': 'tuesday',
+    '2': 'wednesday',
+    '3': 'thursday',
+    '4': 'friday',
+    '5': 'saturday',
+    '6': 'sunday',
+}
+
+
 @client.event
 async def on_ready():
     print('logged in as {0.user}'.format(client))
+    #print(time.gmtime())
+    await client.change_presence(
+        status=discord.Status.dnd,
+        activity=discord.Game(
+            'the day is ' +
+            daysdict[str(time.gmtime(time.time() - 3600 * 7).tm_wday)]))
     tchannel_ids = []
     for guildd in client.guilds:
         for channell in guildd.text_channels:
@@ -80,6 +102,7 @@ async def on_ready():
         ttchannel_lastmesid = ttchannel.last_message_id
         lastmes_dict[str(idd)] = ttchannel_lastmesid
 
+
 class role_stuff(object):
     def __init__(self, mm):  #mm is member
         self.mm = mm
@@ -88,6 +111,145 @@ class role_stuff(object):
             self.rolelist.append(r.id)
         del self.rolelist[0]
 
+
+def time_left(input_nowtime, input_waitime):
+    nowtsec = time.time()
+    elapsed = nowtsec - input_nowtime
+    timeleft = input_waitime - elapsed
+    return str(int(timeleft))
+
+
+def filereadtimes(filename_):
+    timefile = open(filename_, 'r')
+    linelist = timefile.readlines()
+    nowtimev1 = linelist[0]
+    timer = float(linelist[1])
+    timefile.close()
+    nowtime = float(nowtimev1[:-(2)])
+    return [nowtime, timer]
+
+
+def read_return_time(file_name):
+    l = filereadtimes(file_name)
+    r = time_left(l[0], l[1])
+    return r
+
+
+@client.command(
+    help=
+    'returns the weather (syntax: $weather [location]) (be sure your location is spelled correctly',
+    brief='returns the weather')
+async def weather(ctx, *, arg='Boston, US'):
+    try:
+        location = arg
+        template_weather = weatherloop.weathermessage.format(
+            *weatherloop.get_weather_things(location))
+    except:
+        location = 'Boston, US'
+        template_weather = weatherloop.weathermessage.format(
+            *weatherloop.get_weather_things(location))
+    await ctx.channel.send(template_weather)
+
+
+@client.command(help='cheadle wotd, no arguments', brief='cheadle wotd')
+async def cheadle(ctx):
+    await ctx.channel.send(file=discord.File(cheadlewotd()))
+
+
+@client.command(help='echos text after the command', brief='echos')
+async def echo(ctx, *, arg='put in something to echo you stupid fuck'):
+    await ctx.channel.send(arg)
+
+
+@client.command(help='wordlist count', brief='wordlist count')
+async def words(ctx):
+    await ctx.channel.send(str(len(wordlist)) + ' words')
+
+
+@client.command(help='time until next cheadle in seconds',
+                brief='time until next cheadle')
+async def timeleftcheadle(ctx):
+    await ctx.channel.send(time_left(tsecc, wtimec) + ' seconds')
+
+
+@client.command(help='time until next voice join in seconds',
+                brief='time until next voice join')
+async def voicetimer(ctx):
+    await ctx.channel.send(read_return_time('jointime.txt') + ' seconds')
+
+
+@client.command(help='num of sounds for $joinvoice and random joining',
+                brief='num of sounds')
+async def lensonglist(ctx):
+    await ctx.channel.send(str(len(joinboice.songlist)) + ' songs')
+
+
+@client.command(
+    help='joins your current voice channel and plays a random sound/song',
+    brief='joins vc')
+async def joinvoice(ctx, *, arg=''):
+    songlistwvol = joinboice.songlistwvol
+    songlist = list(songlistwvol)
+
+    thing = True
+    try:
+        int(arg)
+    except ValueError:
+        thing = False
+    if thing == False or not (int(arg) in range(len(songlist))):
+        songindex = random.randint(0, len(songlist) - 1)
+    else:
+        songindex = int(arg)
+    #songindex = 25
+    channeld = client.get_channel(ctx.message.author.voice.channel.id)
+    print('joining ' + channeld.name)
+    vcm = await channeld.connect()
+    await asyncio.sleep(0.3)
+    song = songlist[songindex]
+    audio = discord.FFmpegPCMAudio(source="songs/" + song + ".mp3")
+    source = discord.PCMVolumeTransformer(audio)
+    source.volume = songlistwvol[song]
+    print('playing ' + song)
+    vcm.play(source)
+    while vcm.is_playing():
+        await asyncio.sleep(0.5)
+    print('leaving ' + channeld.name)
+    await vcm.disconnect()
+
+
+@client.command(help='time untile next nami and its alert',
+                brief='time untile next nami')
+async def namitime(ctx):
+    await ctx.channel.send(read_return_time('namitime.txt') + ' seconds')
+
+
+@client.command(help='mesdict (testing thing)', brief='many numbers')
+async def mesdict(ctx):
+    global lastmes_dict
+    await ctx.channel.send(lastmes_dict)
+
+
+@client.command(help='adds reactions to the previous message in that channel',
+                brief='adds reactions to prev message')
+async def addreactions(ctx, *args):
+    emlist = []
+    for arg in args:
+        emlist.append(arg)
+
+    message_t = await ctx.message.channel.fetch_message(lastmes_dict[str(
+        ctx.message.channel.id)])
+
+    for emoji in emlist:
+        try:
+            await message_t.add_reaction(emoji)
+        except:
+            pass
+    await ctx.message.delete()
+
+
+@client.command(help='floppa gif', brief='flopa')
+async def floppa(ctx):
+    ctx.message.channel.send(floppagif(ctx.channel, 'floppa'))
 
 
 @client.event
@@ -106,40 +268,38 @@ async def on_message(message):
 
     global lastmes_dict
 
-    if not (message.content.startswith('$addreaction')
+    if not (message.content.startswith('$addreactions')
             or len(message.content) <= 0) or len(message.attachments) > 0:
         lastmes_dict[str(message.channel.id)] = message.id
-
 
     if message.author.bot:
         return
 
-    def cheadle_com():
-        cheadlewotd()
+    ctx = await client.get_context(message)
+    if ctx.valid:
+        await client.process_commands(message)
+        return
 
-    def time_left(input_nowtime, input_waitime):
-        nowtsec = time.time()
-        elapsed = nowtsec - input_nowtime
-        timeleft = input_waitime - elapsed
-        return str(int(timeleft))
-
-    def filereadtimes(filename_):
-        timefile = open(filename_, 'r')
-        linelist = timefile.readlines()
-        nowtimev1 = linelist[0]
-        timer = float(linelist[1])
-        timefile.close()
-        nowtime = float(nowtimev1[:-(2)])
-        return [nowtime, timer]
-
-    def read_return_time(file_name):
-        l = filereadtimes(file_name)
-        r = time_left(l[0], l[1])
-        return r
+    if 'mm' in message.content:
+        send_string = ''
+        for i in range(random.randint(1, 51)):
+            send_string += 'm'
+        await message.channel.send(send_string)
 
     def ping_pong(input_message):
         if message.author.bot:
             return
+        banned_2 = ['c', 's']
+        banned_3 = ['i', 'ee', 'ea']
+        banned_4 = ['c', 'k', 'ck', 's']
+        banned_5 = ['a', 'ah', 'u', 'uh']
+        for word2 in banned_2:
+            for word3 in banned_3:
+                for word4 in banned_4:
+                    for word5 in banned_5:
+                        fullword = word2 + word3 + word4 + word5
+                        if 'JAH' + fullword.upper() in message.content.upper():
+                            return 'shut up higg'
         input_message_new = ''
         dont_t = ''
         if '<' in input_message and '>' in input_message:
@@ -157,123 +317,36 @@ async def on_message(message):
         return_message = rm1.lower() + " :ping_pong:"
         return return_message
 
-    async def send_message(input_message, output):
-        await input_message.channel.send(output)
+    if 'ping' in message.content or 'pong' in message.content:
+        await message.channel.send(ping_pong(message.content))
 
-    async def send_filec(input_message, output):
-        cheadle_com()
-        await input_message.channel.send(file=output)
-
-    async def join_channel(input_message):
-        await join_song_com(input_message.author.voice.channel.id,
-                            input_message.content[len('$joinvoice '):])
-
-    async def get_emoji(message_e):
-        return_e = message_e.content[(len('$addreaction')) + 1:]
-        return return_e
-
-    async def react(message_r, message_t_id):
-        emoji = await get_emoji(message_r)
-        message_t = await message_r.channel.fetch_message(message_t_id)
-        await message_t.add_reaction(emoji)
-        await message.delete()
-
-    def weather_yeah(city):
-        try:
-            template_weather = weatherloop.weathermessage.format(
-                *weatherloop.get_weather_things(city))
-        except:
-            city = 'Boston, US'
-            template_weather = weatherloop.weathermessage.format(
-                *weatherloop.get_weather_things(city))
-        return template_weather
-
-    command_dict = {
-        '$weather':
-        [send_message, [message, weather_yeah(message.content[9:])]],
-        '$cheadle': [send_filec, [message, discord.File("result.jpg")]],
-        '$echo ': [send_message, [message, message.content[6:]]],
-        '$chance': [send_message, [message,
-                                   str(chance) + ' out of 50000']],
-        '$words': [send_message, [message,
-                                  str(len(wordlist)) + ' words']],
-        '$timeleftcheadle':
-        [send_message, [message,
-                        time_left(tsecc, wtimec) + ' seconds']],
-        '$voicetimer': [
-            send_message,
-            [message, read_return_time('jointime.txt') + ' seconds']
-        ],
-        '$lensonglist':
-        [send_message, [message,
-                        str(len(joinboice.songlist)) + ' songs']],
-        '$joinvoice': [join_channel, [message]],
-        '$namitime': [
-            send_message,
-            [message, read_return_time('namitime.txt') + ' seconds']
-        ],
-        '$addreaction ':
-        [react, [message, lastmes_dict[str(message.channel.id)]]],
-        '$mesdict': [send_message, [message, lastmes_dict]],
-        '$floppa': [floppagif, [message, 'floppa']],
-        'mm': [send_message, [message, mmmm()]],
-        'ping': [send_message, [message,
-                                ping_pong(str(message.content))]],
-        'pong': [send_message, [message,
-                                ping_pong(str(message.content))]],
-    }
-
-    command_namelist = list(command_dict)
-
-    for command in command_namelist:
-        if command.upper() in message.content.upper():
-            #print('test')
-            if 'JAH' in message.content.upper():
-                pass
-            else:
-                banned_2 = ['c', 's']
-                banned_3 = ['i', 'ee', 'ea']
-                banned_4 = ['c', 'k', 'ck', 's']
-                banned_5 = ['a', 'ah', 'u', 'uh']
-                for word2 in banned_2:
-                    for word3 in banned_3:
-                        for word4 in banned_4:
-                            for word5 in banned_5:
-                                fullword = word2 + word3 + word4 + word5
-                                if fullword.upper() in message.content.upper():
-                                    return_message = 'shut up higg'
-                                    await message.channel.send(return_message)
-                                    return
-            command_args = command_dict[command][1]
-            try:
-                await command_dict[command][0](command_args[0],
-                                               command_args[1])
-            except:
-                await command_dict[command][0](command_args[0])
-            return
 
 gdict = {}
+
+
 @client.event
 async def on_member_remove(member):
-  try:
-    gdict[str(member.guild.id)][str(member.id)] = role_stuff(member)
-  except KeyError:
-    gdict[str(member.guild.id)] = {}
-    gdict[str(member.guild.id)][str(member.id)] = role_stuff(member)
+    try:
+        gdict[str(member.guild.id)][str(member.id)] = role_stuff(member)
+    except KeyError:
+        gdict[str(member.guild.id)] = {}
+        gdict[str(member.guild.id)][str(member.id)] = role_stuff(member)
+
 
 @client.event
 async def on_member_join(member):
     print('yeah')
     try:
-      for r in gdict[str(member.guild.id)][str(member.id)].rolelist:
-        try:
-          await member.add_roles(member.guild.get_role(r))
-          #print('added ' + member.guild.get_role(r).name)
-        except discord.Forbidden:
-          print(member.guild.get_role(r).name + ' is forbidden; passed')
-          pass
+        for r in gdict[str(member.guild.id)][str(member.id)].rolelist:
+            try:
+                await member.add_roles(member.guild.get_role(r))
+                #print('added ' + member.guild.get_role(r).name)
+            except discord.Forbidden:
+                print(member.guild.get_role(r).name + ' is forbidden; passed')
+                pass
     except KeyError:
-      pass #add txt stuff here eventually?
+        pass  #add txt stuff here eventually?
+
 
 def cheadlewotd():
     filename = 'dc_pics/' + str(random.randint(1, 71)) + '.jpg'
@@ -301,6 +374,7 @@ def cheadlewotd():
         color,
         font=bottom_font)
     my_image.save("result.jpg")
+    return 'result.jpg'
 
 
 @tasks.loop()
@@ -329,10 +403,15 @@ async def timer_shit_fuck():
         wtimec = wtime1 + wtime2
     await asyncio.sleep(wtimec)
     print('sending cheadle...')
-    cheadlewotd()
+
     message_channel = client.get_channel(target_channel_id)
-    await message_channel.send(file=discord.File('result.jpg'))
+    await message_channel.send(file=discord.File(cheadlewotd()))
     print('cheadle sent')
+    await client.change_presence(
+        status=discord.Status.dnd,
+        activity=discord.Game(
+            'the day is ' +
+            daysdict[str(time.gmtime(time.time() - 3600 * 7).tm_wday)]))
     await asyncio.sleep(240)
 
 
@@ -341,19 +420,23 @@ async def before_timer_shit_fuck():
     await client.wait_until_ready()
     await asyncio.sleep(1)
 
+
 @client.event
 async def floppagif(input_message, keyword):
-  apikey = 'ACQ2CXM2PN1Z'
-  lmt = 50
-  search_term = keyword
-  r = requests.get("https://g.tenor.com/v1/search?q={}&key={}&limit={}".format(search_term, apikey, lmt))
-  idd = random.randint(0, lmt-1)
-  if r.status_code == 200:
-    top_gifs = json.loads(r.content)
-    fuck = top_gifs['results'][idd]['media'][0]['gif']['url']
-  else:
-    fuck = 'no gifs found'
-  await input_message.channel.send(fuck)
+    apikey = 'ACQ2CXM2PN1Z'
+    lmt = 50
+    search_term = keyword
+    r = requests.get(
+        "https://g.tenor.com/v1/search?q={}&key={}&limit={}".format(
+            search_term, apikey, lmt))
+    idd = random.randint(0, lmt - 1)
+    if r.status_code == 200:
+        top_gifs = json.loads(r.content)
+        fuck = top_gifs['results'][idd]['media'][0]['gif']['url']
+    else:
+        fuck = 'no gifs found'
+    return fuck
+
 
 #@jahtimer.before_loop
 #async def before_timer_jahtimer():
@@ -398,7 +481,7 @@ async def join_song_com(channel_id, index):
         int(index)
     except ValueError:
         thing = False
-    if thing == False or not(int(index) in range(len(songlist))):
+    if thing == False or not (int(index) in range(len(songlist))):
         songindex = random.randint(0, len(songlist) - 1)
     else:
         songindex = int(index)
@@ -417,6 +500,7 @@ def mmmm():
     for i in range(random.randint(1, 51)):
         send_string += 'm'
     return send_string
+
 
 timer_shit_fuck.start()
 #jahtimer.start()

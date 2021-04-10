@@ -1,9 +1,9 @@
-from discord.ext import tasks
+from discord.ext import tasks, commands
 import asyncio
 import discord
 import time
 
-client = discord.Client(intents=discord.Intents.all())
+client = commands.Bot(intents=discord.Intents.all(), command_prefix='$')
 jah_id = 290214091442618380
 knuc_id = 383719623184482304
 terry_id = 587054039452221603
@@ -44,8 +44,6 @@ async def nami_timer():
         send_day += 1
         if send_day >= 7:
             send_day -= 7
-
-    #print(t.tm_min > send_min and t.tm_hour == send_time)
 
     if t.tm_hour == send_time and t.tm_min == send_min and t.tm_wday == send_day:
         #print('1-n')
@@ -90,18 +88,9 @@ async def nami_timer():
     filewriten(tsec, wtimea)
     await asyncio.sleep(wtimea)
 
-#but ive got someone to make reports
-#that tell me how my moneys spent
-#to book my stays and draw my blinds
-#so i cant tell whats really there
-#and all i need is a great big congratulations
-
 @nami_timer.before_loop
 async def before_timer_nami():
     await client.wait_until_ready()
     await asyncio.sleep(1)
-
-#i thought i was only acting
-#but it felt exactly like it was all for real
 
 nami_timer.start()

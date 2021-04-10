@@ -1,13 +1,11 @@
 import discord
-from discord.ext import tasks
+from discord.ext import tasks, commands
 import random
 import asyncio
 import time
-#import os
-#from threading import Thread
-#from multiprocessing import Pool
 
-client = discord.Client(intents=discord.Intents.all())
+
+client = commands.Bot(intents=discord.Intents.all(), command_prefix='$')
 
 true_n_general = 802684938381557840  #nme
 testing_id = 815405498412171294  #testing
@@ -85,48 +83,25 @@ class voice_stuff(object):
 
   @client.event
   async def join(self):
-      #global channel
-      #print('got it')
       self.voicec = await self.channel.connect()
-      #print('got it 2')
 
   @client.event
   async def playsong(self):
       print('playing ' + songlist[self.indexx])
-      #songindex = random.randint(0, len(songlist) - 1)
-      #songindex = 0
       song = songlist[self.indexx]
       audio = discord.FFmpegPCMAudio(source="songs/" + song + ".mp3")
       source = discord.PCMVolumeTransformer(audio)
       source.volume = songlistwvol[song]
       self.voicec.play(source)
-      #while self.voicec.is_playing():
-      #    self.vcc = 1
-      #    await asyncio.sleep(0.5)
-      #self.vcc = 0
       
 
   @client.event
   async def voicejoining(self):
-      print('chech')
-      print('chech2')
       await voice_stuff.join()
-      print('chech3')
       await asyncio.sleep(1)
-      print('chech4')
       await voice_stuff.playsong()
-      print('chech5')
       await voice_stuff.leave()
       
-      
-
-
-
-
-#def between_vcj(idlist, indexx):
-#  loop = asyncio.new_event_loop()
-#  asyncio.set_event_loop(loop)
-
 
 @tasks.loop()
 @client.event
@@ -137,7 +112,6 @@ async def join_song():
     await asyncio.sleep(3)
     filewritev(nowtimev, timer)
     await asyncio.sleep(timer)
-    #await asyncio.sleep(3)
     songindex = random.randint(0, len(songlist) - 1)
     #songindex = 16
     guildlist = []
@@ -152,7 +126,6 @@ async def join_song():
       vcmlen = len(voicelistm)
       for item in range(vcmlen):
         maxList = max(voicelistm, key=len)
-        #maxLength = max(len(x) for x in voicelistm)
         sortedvoice.append(voicelist[voicelistm.index(maxList)])
         voicelist.remove(voicelist[voicelistm.index(maxList)]) #the industrial revolution and its consequences have been a disaster for the human race
         voicelistm.remove(maxList)
