@@ -444,64 +444,6 @@ async def floppagif(input_message, keyword):
 #await asyncio.sleep(1)
 # :) <3
 
-#------------------------------------------------------------------------------------
-#------------------------------------$joinvoice--------------------------------------
-#------------------------------------------------------------------------------------
-
-songlistwvol = joinboice.songlistwvol
-songlist = list(songlistwvol)
-
-
-@client.event
-async def joinm(boice_channel):
-    print(f"Got channel {boice_channel}")
-    return await boice_channel.connect()
-
-
-@client.event
-async def leavem(boice_channel, voicec):
-    print(f"Leaving channel {boice_channel}")
-    await voicec.disconnect()
-
-
-@client.event
-async def playsongm(index, voicec):
-    print('playing ' + songlist[index])
-    song = songlist[index]
-    audio = discord.FFmpegPCMAudio(source="songs/" + song + ".mp3")
-    source = discord.PCMVolumeTransformer(audio)
-    source.volume = songlistwvol[song]
-    voicec.play(source)
-
-
-@client.event
-async def join_song_com(channel_id, index):
-    thing = True
-    try:
-        int(index)
-    except ValueError:
-        thing = False
-    if thing == False or not (int(index) in range(len(songlist))):
-        songindex = random.randint(0, len(songlist) - 1)
-    else:
-        songindex = int(index)
-    #songindex = 25
-    channeld = client.get_channel(channel_id)
-    vcm = await joinm(channeld)
-    await asyncio.sleep(1)
-    await playsongm(songindex, vcm)
-    while vcm.is_playing():
-        await asyncio.sleep(0.5)
-    await leavem(channeld, vcm)
-
-
-def mmmm():
-    send_string = ''
-    for i in range(random.randint(1, 51)):
-        send_string += 'm'
-    return send_string
-
-
 timer_shit_fuck.start()
 #jahtimer.start()
 
