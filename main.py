@@ -13,8 +13,9 @@
 #complete command rewrite woooooooooooooooooo
 
 #2 DO:
-#OUTLINES on text
 #db, use for large data analysis (word frequency)
+#ace attorney bot
+#dailytimer() for allt he daily stuff
 #roles txt (idk lol)
 #maybe fix nami timer again
 #organise? (whatever dude shit works i dont give a fuck this sucks)
@@ -32,7 +33,8 @@ import weatherloop
 import requests
 import json
 #import anim
-#from replit import db
+from replit import db
+import dbwords
 
 exec(open("joinboice.py").read())
 exec(open("namiping.py").read())
@@ -41,6 +43,8 @@ exec(open("weatherloop.py").read())
 #light blue: (135, 206, 250)
 #pink: (255, 192, 203)
 #dark(?) pink: (219, 112, 147)
+#white: (255, 255, 255)
+#black: (0, 0, 0)
 
 intents = discord.Intents.all()
 client = commands.Bot(intents=intents, command_prefix='$')
@@ -81,6 +85,7 @@ daysdict = {
 @client.event
 async def on_ready():
     print('logged in as {0.user}'.format(client))
+    #db['wordstuff'] = {}
     #print(time.gmtime())
     await client.change_presence(
         status=discord.Status.dnd,
@@ -89,6 +94,11 @@ async def on_ready():
             daysdict[str(time.gmtime(time.time() - 3600 * 7).tm_wday)]))
     tchannel_ids = []
     for guildd in client.guilds:
+        try:
+            db['wordstuff'][str(guildd.id)]
+        except KeyError:
+            db['wordstuff'][str(guildd.id)] = {}
+        #print(list(db['wordstuff']))
         for channell in guildd.text_channels:
             tchannel_ids.append(channell.id)
 
@@ -100,7 +110,17 @@ async def on_ready():
     for idd in tchannel_ids:
         ttchannel = client.get_channel(idd)
         ttchannel_lastmesid = ttchannel.last_message_id
-        lastmes_dict[str(idd)] = ttchannel_lastmesid
+        if ttchannel_lastmesid != None:
+            try:
+                mmessage = await ttchannel.fetch_message(ttchannel_lastmesid)
+                if not (mmessage.content.startswith('$addreactions')
+                        or len(mmessage.content) <= 0) or len(
+                            mmessage.attachments) > 0:
+                    lastmes_dict[str(idd)] = ttchannel_lastmesid
+            except discord.NotFound:
+                pass
+        #mmessage = await ttchannel.fetch_message(ttchannel_lastmesid)
+        #if not (mmessage.content.startswith('$addreactions') or len(mmessage.content) <= 0) or len(mmessage.attachments) > 0:
 
 
 class role_stuff(object):
@@ -236,8 +256,15 @@ async def addreactions(ctx, *args):
     for arg in args:
         emlist.append(arg)
 
-    message_t = await ctx.message.channel.fetch_message(lastmes_dict[str(
-        ctx.message.channel.id)])
+    #print(str(lastmes_dict[str(ctx.message.channel.id)]))
+    #print(str(ctx.channel.id))
+    try:
+        message_t = await ctx.channel.fetch_message(lastmes_dict[str(
+            ctx.message.channel.id)])
+    except KeyError:
+        #message_t = await ctx.channel.fetch_message(ctx.channel.last_message_id)
+        await ctx.channel.send('couldnt find anything to react to')
+        return
 
     for emoji in emlist:
         try:
@@ -249,7 +276,26 @@ async def addreactions(ctx, *args):
 
 @client.command(help='floppa gif', brief='flopa')
 async def floppa(ctx):
-    ctx.message.channel.send(floppagif(ctx.channel, 'floppa'))
+    await ctx.channel.send(floppagif('floppa'))
+
+
+@client.command(help='word listing for testing', brief='for testing')
+async def worddb(ctx):
+    await ctx.channel.send(list(db['wordstuff']))
+    for item in list(db['wordstuff']):
+        await ctx.channel.send(db['wordstuff'][item])
+
+
+@client.command(help='individual frequency of a word', brief='frequency')
+async def ifrq(ctx, *args):
+    args2 = list(args)
+    #print(args)
+    #print(args2)
+    if len(args2) != 1:
+        await ctx.channel.send('no data available')
+        return
+
+    await ctx.channel.send(dbwords.indiv_freq(ctx.guild.id, args2[0]))
 
 
 @client.event
@@ -280,6 +326,12 @@ async def on_message(message):
         await client.process_commands(message)
         return
 
+    for word in message.content.lower().split():
+        try:
+            db['wordstuff'][str(message.guild.id)][word] += 1
+        except KeyError:
+            db['wordstuff'][str(message.guild.id)][word] = 1
+
     if 'mm' in message.content:
         send_string = ''
         for i in range(random.randint(1, 51)):
@@ -298,7 +350,9 @@ async def on_message(message):
                 for word4 in banned_4:
                     for word5 in banned_5:
                         fullword = word2 + word3 + word4 + word5
-                        if 'PING' + fullword.upper() in message.content.upper() or 'PONG' + fullword.upper() in message.content.upper():
+                        if 'PING' + fullword.upper() in message.content.upper(
+                        ) or 'PONG' + fullword.upper(
+                        ) in message.content.upper():
                             return 'shut up higg'
         input_message_new = ''
         dont_t = ''
@@ -356,23 +410,55 @@ def cheadlewotd():
         width, height = image.size
     top_size = width * 0.083
     bot_size = width * 0.17
-    color = (135, 206, 250)
+    color = (255, 255, 255)
+    back_color = (0, 0, 0)
     top_font = ImageFont.truetype('impact.ttf', int(top_size))
     bottom_font = ImageFont.truetype('impact.ttf', int(bot_size))
     random_word = wordlist[random.randint(0, len(wordlist) - 1)]
     top_text = "Don Cheadle word of the day"
     bottom_text = random_word
+    top_x = width * 0.0265
+    bot_x = int(width * (0.5 - (0.038 * len(bottom_text))))
+    top_y = -2
+    bot_y = int(height - (bot_size * 1.3))
     image_edit = ImageDraw.Draw(my_image)
-    image_edit.text((width * 0.0265, -2), top_text, color, font=top_font)
-    image_edit.text(
-        (
-            int(
-                width * (0.5 - (0.038 * len(bottom_text)))
-            ),  # i literally have                                                                       no idea how this                                                                       works
-            int(height - (bot_size * 1.3))),
-        bottom_text,
-        color,
-        font=bottom_font)
+    #top border
+    image_edit.text((top_x - 1, top_y - 1),
+                    top_text,
+                    font=top_font,
+                    fill=back_color)
+    image_edit.text((top_x + 1, top_y - 1),
+                    top_text,
+                    font=top_font,
+                    fill=back_color)
+    image_edit.text((top_x - 1, top_y + 1),
+                    top_text,
+                    font=top_font,
+                    fill=back_color)
+    image_edit.text((top_x + 1, top_y + 1),
+                    top_text,
+                    font=top_font,
+                    fill=back_color)
+    #bot border
+    image_edit.text((bot_x - 1, bot_y - 1),
+                    bottom_text,
+                    font=bottom_font,
+                    fill=back_color)
+    image_edit.text((bot_x + 1, bot_y - 1),
+                    bottom_text,
+                    font=bottom_font,
+                    fill=back_color)
+    image_edit.text((bot_x - 1, bot_y + 1),
+                    bottom_text,
+                    font=bottom_font,
+                    fill=back_color)
+    image_edit.text((bot_x + 1, bot_y + 1),
+                    bottom_text,
+                    font=bottom_font,
+                    fill=back_color)
+    #main text
+    image_edit.text((top_x, top_y), top_text, fill=color, font=top_font)
+    image_edit.text((bot_x, bot_y), bottom_text, fill=color, font=bottom_font)
     my_image.save("result.jpg")
     return 'result.jpg'
 
@@ -421,8 +507,7 @@ async def before_timer_shit_fuck():
     await asyncio.sleep(1)
 
 
-@client.event
-async def floppagif(input_message, keyword):
+def floppagif(keyword):
     apikey = 'ACQ2CXM2PN1Z'
     lmt = 50
     search_term = keyword
